@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GlucoLens – Diabetes risk assessment</title>
+<meta name="description" content="Estimate diabetes risk from routine health measurements with a trained logistic-regression model.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3C16 3 6 14 6 20a10 10 0 0 0 20 0C26 14 16 3 16 3z' fill='%230f766e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="/" aria-label="GlucoLens home">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C16 3 6 14 6 20a10 10 0 0 0 20 0C26 14 16 3 16 3z" fill="var(--teal)"/><path d="M11 21h3l1.5-3 2.5 6 1.5-3H22" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>GlucoLens</span>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="t-assess" aria-controls="p-assess" aria-selected="true">Assessment</button>
+      <button role="tab" id="t-model" aria-controls="p-model" aria-selected="false" tabindex="-1">Model</button>
+      <button role="tab" id="t-api" aria-controls="p-api" aria-selected="false" tabindex="-1">API</button>
+    </nav>
+    <div class="top-r">
+      <span class="status" id="status" title="API status"><i></i><span>Connecting</span></span>
+      <button class="icon-btn" id="theme" aria-label="Toggle dark mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+<!-- ================= ASSESSMENT ================= -->
+<section id="p-assess" role="tabpanel" aria-labelledby="t-assess">
+  <div class="intro">
+    <h1>Check diabetes risk from routine measurements</h1>
+    <p>Enter a patient's details. The estimate updates as you change values.</p>
+    <div class="presets" aria-label="Example patients">
+      <span>Try an example:</span>
+      <button class="chip" data-preset="healthy">Healthy adult</button>
+      <button class="chip" data-preset="borderline">Borderline</button>
+      <button class="chip" data-preset="high">High risk</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <form id="form" class="panel form" autocomplete="off" novalidate>
+      <fieldset>
+        <legend>Patient</legend>
+        <div class="field">
+          <span class="lbl" id="l-gender">Gender</span>
+          <div class="seg" role="radiogroup" aria-labelledby="l-gender">
+            <label><input type="radio" name="gender" value="Female"><span>Female</span></label>
+            <label><input type="radio" name="gender" value="Male" checked><span>Male</span></label>
+            <label><input type="radio" name="gender" value="Other"><span>Other</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="lbl" for="age">Age <small>years</small></label>
+          <div class="pair"><input type="range" id="age-r" min="0" max="100" step="1" aria-label="Age slider"><input type="number" id="age" name="age" min="0" max="120" step="1" inputmode="numeric"></div>
+        </div>
+        <div class="field">
+          <label class="lbl" for="smoking_history">Smoking history</label>
+          <select id="smoking_history" name="smoking_history">
+            <option value="never">Never smoked</option>
+            <option value="former">Former smoker</option>
+            <option value="current">Current smoker</option>
+            <option value="not current">Not current</option>
+            <option value="ever">Ever smoked</option>
+            <option value="No Info">No information</option>
+          </select>
+        </div>
+        <div class="switches">
+          <label class="sw"><input type="checkbox" name="hypertension" role="switch"><span class="track"></span><span>Hypertension</span></label>
+          <label class="sw"><input type="checkbox" name="heart_disease" role="switch"><span class="track"></span><span>Heart disease</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Measurements</legend>
+        <div class="field">
+          <label class="lbl" for="bmi">BMI <small>kg/m²</small><em id="bmi-cat"></em></label>
+          <div class="pair"><input type="range" id="bmi-r" min="10" max="60" step="0.1" aria-label="BMI slider"><input type="number" id="bmi" name="bmi" min="10" max="100" step="0.1" inputmode="decimal"></div>
+        </div>
+        <div class="field">
+          <label class="lbl" for="HbA1c_level">HbA1c <small>% · average over about 3 months</small></label>
+          <div class="pair"><input type="range" id="HbA1c_level-r" min="3" max="10" step="0.1" aria-label="HbA1c slider"><input type="number" id="HbA1c_level" name="HbA1c_level" min="3" max="15" step="0.1" inputmode="decimal"></div>
+        </div>
+        <div class="field">
+          <label class="lbl" for="blood_glucose_level">Blood glucose <small>mg/dL</small></label>
+          <div class="pair"><input type="range" id="blood_glucose_level-r" min="50" max="350" step="1" aria-label="Blood glucose slider"><input type="number" id="blood_glucose_level" name="blood_glucose_level" min="50" max="500" step="1" inputmode="numeric"></div>
+        </div>
+      </fieldset>
+      <div class="actions"><button type="button" class="btn ghost" id="reset">Reset</button><button type="button" class="btn ghost" id="copy">Copy API request</button></div>
+      <p class="fine" id="form-err" role="alert" hidden></p>
+    </form>
+
+    <aside class="panel result" id="result" aria-live="polite">
+      <div class="res-head">
+        <div class="gauge" id="gauge">
+          <svg viewBox="0 0 140 140" aria-hidden="true"><circle class="g-bg" cx="70" cy="70" r="58"/><circle class="g-fg" id="g-fg" cx="70" cy="70" r="58" transform="rotate(-90 70 70)"/></svg>
+          <div class="g-txt"><b id="pct">–</b><span>chance</span></div>
+        </div>
+        <div class="res-txt">
+          <span class="badge" id="badge">–</span>
+          <h2 id="verdict">Calculating…</h2>
+          <p id="verdict-sub"></p>
+        </div>
+      </div>
+
+      <h3>Where the readings sit</h3>
+      <div id="strips" class="strips"></div>
+
+      <h3>What shaped this estimate</h3>
+      <div class="dir"><span>Lowers risk</span><span>Raises risk</span></div>
+      <div id="drivers" class="drivers"></div>
+      <p class="fine">Compared with an average patient in the training data.</p>
+
+      <ul id="warnings" class="warn" hidden></ul>
+      <p class="fine disclaimer" id="disclaimer">Educational demo, not a medical device. It does not diagnose diabetes. Talk to a clinician about any health concern.</p>
+      <button class="btn ghost print" id="print" type="button">Print report</button>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= MODEL ================= -->
+<section id="p-model" role="tabpanel" aria-labelledby="t-model" hidden>
+  <div class="intro"><h1>How the model performs</h1><p id="model-sub">Measured on 20,000 patients held out from training.</p></div>
+  <div class="metrics" id="metrics"></div>
+  <div class="grid two">
+    <div class="panel"><h3>Prediction outcomes</h3><div id="confusion" class="conf"></div><p class="fine" id="conf-note"></p></div>
+    <div class="panel"><h3>Feature weights</h3><p class="fine">Larger magnitude means more influence on the prediction. Inputs are standardised, so weights are comparable.</p><div id="coefs" class="drivers"></div></div>
+  </div>
+  <div class="panel note"><h3>Reading these numbers</h3>
+    <p id="model-note"></p>
+  </div>
+</section>
+
+<!-- ================= API ================= -->
+<section id="p-api" role="tabpanel" aria-labelledby="t-api" hidden>
+  <div class="intro"><h1>Use the API</h1><p>The same model that powers this page is available over HTTP. Interactive docs are generated from the code.</p>
+    <div class="presets"><a class="btn" href="/docs" target="_blank" rel="noopener">Open Swagger docs</a><a class="btn ghost" href="/redoc" target="_blank" rel="noopener">Open ReDoc</a><a class="btn ghost" href="/openapi.json" target="_blank" rel="noopener">openapi.json</a></div></div>
+  <div class="grid two">
+    <div class="panel"><h3>Endpoints</h3>
+      <ul class="eps">
+        <li><code class="m post">POST</code><code>/api/predict</code><span>Risk for one patient</span></li>
+        <li><code class="m post">POST</code><code>/api/predict/batch</code><span>Up to 500 patients per call</span></li>
+        <li><code class="m get">GET</code><code>/api/model-info</code><span>Metrics and feature weights</span></li>
+        <li><code class="m get">GET</code><code>/api/health</code><span>Readiness check</span></li>
+      </ul>
+    </div>
+    <div class="panel"><h3>Example request</h3><pre id="curl" tabindex="0"></pre><button class="btn ghost" id="copy2" type="button">Copy request</button></div>
+  </div>
+</section>
+</main>
+
+<footer class="wrap foot"><span>GlucoLens · logistic regression on 100,000 patient records</span><span>Not medical advice</span></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/assets/app.js"></script>
+</body>
+</html>

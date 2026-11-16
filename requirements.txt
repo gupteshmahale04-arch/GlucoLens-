@@ -1,0 +1,7 @@
+fastapi==0.163.1
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+scikit-learn==1.9.1   # must match the version that saved diabetes_prediction.pkl
+numpy==2.5.3
+scipy==1.18.1
+joblib==1.6.0
